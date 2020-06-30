@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .mod-service-macbook {
+            margin: 0 auto;
+            max-width: 90%;
+            height: auto;
+            cursor: pointer;
+        }
+        .mod-service-macbook .screen, .mod-service-mobile .screen {
+            position: relative;
+            width: 100%;
+            background: #e4e4e4;
+        }
+        .mod-service-macbook img, .mod-service-mobile img {
+            width: 100%;
+            height: auto;
+        }
+        .mod-service-macbook .viewport {
+            position: absolute;
+            /*transition: background-position 11s ease-in-out;*/
+            background-position: 0 0;
+            background-size: 100% auto;
+            overflow: hidden;
+            background-repeat: no-repeat;
+            margin: 4%;
+            bottom: 10.8%;
+            left: 21%;
+            right: 13.82%;
+            top: 8.3%;
+        }
+        .active {
+            background-position: 0 100px;
+        }
+        .mask-wrap {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            /*opacity: 0;*/
+            z-index: 1;
+            top: 0;
+            left: 0;
+        }
+        .mask {
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,0,0);
+        }
+    </style>
+</head>
+<body>
+
+
+<div class="mod-service-macbook active">
+    <div class="screen" id="main-laptop">
+        <img src="macbook.png">
+        <div class="viewport" style="background-image: url('dashboard-macbook.png');"></div>
+        <div class="mask-wrap"><div class="mask"></div></div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="jquery-ui.min.js"></script>
+<script src="jquery.ui.touch-punch.min.js"></script>
+<script type="text/javascript">
+    const xmen = {
+        status: 'stopped',  // stopped, running
+        in_auto: false, // will be changed to true if animation run automatic
+
+        posStart: '0',
+        postEnd: '100%',
+        duration: 11000,
+        timeoutId: null,
+
+        init: function (id) {
+            const $this = this;
+            const $elm = jQuery('#' + id);
+            const $eViewPort = $elm.find('.viewport');
+            const $eMask = $elm.find('.mask');
+
+            // Init event: hover, mouseover
+            $elm.hover(
+                // On mouseover, replace image
+                function() {
+                    $this.timeoutId && $this.clearTimeout(id);
+
+                    // If the animation is in auto-run
+                    if ($this.in_auto) {
+                        $eViewPort.stop();
+                    } else {
+                        $eViewPort.animate({'background-position-y': $this.postEnd}, $this.calculateDuration(id), 'swing', () => {$this.reset(id)});
+                    }
+                },
+                // On mouseout, put original image back
+                function() {
+                    // If the animation is in auto-run
+                    if ($this.in_auto) {
+                        $eViewPort.animate({'background-position-y': $this.postEnd}, $this.calculateDuration(id), 'swing', () => {$this.reset(id)});
+                    } else {
+                        $eViewPort.stop();
+                    }
+                }
+            );
+
+            $("p").on("swipe",function(){
+                $("span").text("swipe event occurred!!!");
+            });
+
+            $eMask.draggable({
+                drag: function(e, ui) {
+                    $eViewPort.stop();
+                    $this.timeoutId && $this.clearTimeout(id);
+                    const currentPosition = parseFloat($eViewPort.css('background-position-y'));
+                    let nextPosition;
+                    if (0 < ui.position.top) {
+                        nextPosition = currentPosition - 0.5;
+                        nextPosition = nextPosition < 0 ? 0 : nextPosition;
+                    } else {
+                        nextPosition = currentPosition + 0.5;
+                        nextPosition = 100 < nextPosition ? 100 : nextPosition;
+                    }
+                    $eViewPort.css({'background-position-y': nextPosition + '%'});
+                },
+                stop: function( event, ui ) {
+                    $eMask.css({'top': 0, 'left': 0});
+                }
+            });
+
+            // auto run
+            $this.timeoutId = setTimeout(() => {
+                $this.autoRun(id);
+            }, 3000);
+        },
+
+        autoRun: function (id) {
+            const $this = this;
+            const $elm = jQuery('#' + id);
+            const $eViewPort = $elm.find('.viewport');
+            $this.in_auto = true;
+            $eViewPort.animate({'background-position-y': $this.postEnd}, $this.duration, 'swing', () => {
+                $this.in_auto = false;
+                $this.reset(id);
+            });
+        },
+
+        reset: function(id) {
+            const $this = this;
+            $this.in_auto = false;
+            $this.resetPosition(id);
+            $this.clearTimeout(id);
+        },
+
+        resetPosition: function (id) {
+            const $elm = jQuery('#' + id);
+            const $eViewPort = $elm.find('.viewport');
+            $eViewPort.css({'background-position-y': 0});
+        },
+
+        clearTimeout: function (id) {
+            const $this = this;
+
+            $this.timeoutId && clearTimeout($this.timeoutId);
+            $this.timeoutId = null;
+        },
+
+        calculateDuration: function (id) {
+            const $this = this;
+            const $elm = jQuery('#' + id);
+            const $eViewPort = $elm.find('.viewport');
+
+            const currentPosition = parseFloat($eViewPort.css('background-position-y'));
+            const remainingPosition = 100 - currentPosition;
+
+            const remainingSeconds = remainingPosition * $this.duration / 100;
+
+            return remainingSeconds;
+        }
+    };
+
+    xmen.init('main-laptop');
+</script>
+
+</body>
+</html>
